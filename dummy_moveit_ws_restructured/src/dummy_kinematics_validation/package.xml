@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>dummy_kinematics_validation</name>
+  <version>0.1.0</version>
+  <description>Standalone IK/FK validation package for the dummy-ros2 arm.</description>
+  <maintainer email="openai@example.com">OpenAI</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>dummy_moveit_config</depend>
+  <depend>geometry_msgs</depend>
+  <depend>moveit_configs_utils</depend>
+  <depend>moveit_core</depend>
+  <depend>moveit_ros_planning</depend>
+  <depend>moveit_ros_planning_interface</depend>
+  <depend>rclcpp</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

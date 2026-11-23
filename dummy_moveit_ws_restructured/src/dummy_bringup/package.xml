@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>dummy_bringup</name>
+  <version>0.1.0</version>
+  <description>Integrated bringup package for Dummy arm MoveIt 2, ros2_control and optional hardware/gazebo launch.</description>
+  <maintainer email="xin.li@switchpi.com">workspace-rebuild</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>ament_index_python</depend>
+  <depend>controller_manager</depend>
+  <depend>dummy_hardware_interface</depend>
+  <depend>dummy_moveit_config</depend>
+  <depend>dummy_ros2_description</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+  <depend>moveit_configs_utils</depend>
+  <depend>moveit_ros_move_group</depend>
+  <depend>moveit_ros_visualization</depend>
+  <depend>moveit_simple_controller_manager</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>ros2_controllers</depend>
+  <depend>rviz2</depend>
+  <depend>xacro</depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

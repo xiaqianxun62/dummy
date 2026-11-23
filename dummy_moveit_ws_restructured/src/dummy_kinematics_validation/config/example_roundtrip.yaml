@@ -1,0 +1,8 @@
+ik_fk_validator:
+  ros__parameters:
+    mode: roundtrip
+    group_name: dummy_arm
+    tip_link: link6_1_1
+    named_state: reset
+    ik_timeout_s: 0.5
+    ik_attempts: 5

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot name="dummy-ros2">
+  <group name="dummy_arm">
+    <chain base_link="base_link" tip_link="link6_1_1"/>
+  </group>
+
+  <group_state name="home" group="dummy_arm">
+    <joint name="Joint1" value="0"/>
+    <joint name="Joint2" value="0"/>
+    <joint name="Joint3" value="0"/>
+    <joint name="Joint4" value="0"/>
+    <joint name="Joint5" value="0"/>
+    <joint name="Joint6" value="0"/>
+  </group_state>
+
+  <group_state name="reset" group="dummy_arm">
+    <joint name="Joint1" value="0"/>
+    <joint name="Joint2" value="-1.2741"/>
+    <joint name="Joint3" value="1.5708"/>
+    <joint name="Joint4" value="0"/>
+    <joint name="Joint5" value="0"/>
+    <joint name="Joint6" value="0"/>
+  </group_state>
+
+  <disable_collisions link1="base_link" link2="link1_1_1" reason="Adjacent"/>
+  <disable_collisions link1="link1_1_1" link2="link2_1_1" reason="Adjacent"/>
+  <disable_collisions link1="link2_1_1" link2="link3_1_1" reason="Adjacent"/>
+  <disable_collisions link1="link3_1_1" link2="link4_1_1" reason="Adjacent"/>
+  <disable_collisions link1="link3_1_1" link2="link5_1_1" reason="Never"/>
+  <disable_collisions link1="link3_1_1" link2="link6_1_1" reason="Never"/>
+  <disable_collisions link1="link4_1_1" link2="link5_1_1" reason="Adjacent"/>
+  <disable_collisions link1="link5_1_1" link2="link6_1_1" reason="Adjacent"/>
+</robot>

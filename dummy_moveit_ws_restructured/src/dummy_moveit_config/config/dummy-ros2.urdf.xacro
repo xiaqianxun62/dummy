@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dummy-ros2">
+  <xacro:arg name="initial_positions_file" default="$(find dummy_moveit_config)/config/initial_positions.yaml"/>
+  <xacro:arg name="use_fake_hardware" default="true"/>
+  <xacro:arg name="serial_port" default="/dev/ttyACM0"/>
+  <xacro:arg name="baud_rate" default="115200"/>
+  <xacro:arg name="command_mode" default="2"/>
+  <xacro:arg name="joint_command_prefix" default=">"/>
+  <xacro:arg name="joint_speed_deg" default="0.0"/>
+  <xacro:arg name="position_offsets_rad" default="0,0,1.57079,0,0,0"/>
+  <xacro:arg name="position_signs" default="1,1,1,1,-1,-1"/>
+  <xacro:arg name="write_rate_hz" default="20.0"/>
+  <xacro:arg name="read_timeout_ms" default="200.0"/>
+  <xacro:arg name="slow_command_timeout_ms" default="15000.0"/>
+  <xacro:arg name="start_on_activate" default="false"/>
+  <xacro:arg name="disable_on_deactivate" default="true"/>
+  <xacro:arg name="auto_home_on_activate" default="false"/>
+
+  <xacro:include filename="$(find dummy_ros2_description)/urdf/dummy-ros2.xacro"/>
+  <xacro:include filename="$(find dummy_moveit_config)/config/dummy-ros2.ros2_control.xacro"/>
+
+  <xacro:dummy_ros2_ros2_control
+    name="DummySystem"
+    initial_positions_file="$(arg initial_positions_file)"
+    use_fake_hardware="$(arg use_fake_hardware)"
+    serial_port="$(arg serial_port)"
+    baud_rate="$(arg baud_rate)"
+    command_mode="$(arg command_mode)"
+    joint_command_prefix="$(arg joint_command_prefix)"
+    joint_speed_deg="$(arg joint_speed_deg)"
+    position_offsets_rad="$(arg position_offsets_rad)"
+    position_signs="$(arg position_signs)"
+    write_rate_hz="$(arg write_rate_hz)"
+    read_timeout_ms="$(arg read_timeout_ms)"
+    slow_command_timeout_ms="$(arg slow_command_timeout_ms)"
+    start_on_activate="$(arg start_on_activate)"
+    disable_on_deactivate="$(arg disable_on_deactivate)"
+    auto_home_on_activate="$(arg auto_home_on_activate)"/>
+</robot>

@@ -1,0 +1,13 @@
+serial_port: /dev/ttyACM0
+baud_rate: 115200
+command_mode: 2
+joint_command_prefix: ">"
+joint_speed_deg: 20.0
+position_offsets_rad: "0,0,1.57079,0,0,0"
+position_signs: "1,1,1,1,-1,-1"
+write_rate_hz: 10.0
+read_timeout_ms: 80.0
+slow_command_timeout_ms: 15000.0
+start_on_activate: false
+disable_on_deactivate: true
+auto_home_on_activate: false

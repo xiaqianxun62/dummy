@@ -1,0 +1,8 @@
+<library path="dummy_hardware_interface">
+  <class
+    name="dummy_hardware_interface/DummyHardwareInterface"
+    type="dummy_hardware_interface::DummyHardwareInterface"
+    base_class_type="hardware_interface::SystemInterface">
+    <description>ASCII protocol backed ros2_control interface for Dummy arm.</description>
+  </class>
+</library>
