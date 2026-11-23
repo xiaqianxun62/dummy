@@ -117,6 +117,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
     private string _collisionRadiusInput = "45,20,25,20,25,30,20";
     private string _collisionMarginInput = "0,0,0,0,0,0,0";
     private string _collisionGroundInput = "-20,-20,-20,-20,-20,-20,-20";
+    private string _hardwarePollHzInput = "10";
+    private string _simulationPollHzInput = "50";
     private string _maxVelocityInput = "30";
     private string _maxAccelInput = "60";
     private string _collisionText = "未检查";
@@ -626,6 +628,30 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
         }
     }
 
+    public string HardwarePollHzInput
+    {
+        get => _hardwarePollHzInput;
+        set
+        {
+            if (_hardwarePollHzInput == value)
+                return;
+            _hardwarePollHzInput = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string SimulationPollHzInput
+    {
+        get => _simulationPollHzInput;
+        set
+        {
+            if (_simulationPollHzInput == value)
+                return;
+            _simulationPollHzInput = value;
+            OnPropertyChanged();
+        }
+    }
+
     public string MaxVelocityInput
     {
         get => _maxVelocityInput;
@@ -828,11 +854,14 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
         {
             ApplySettings(false);
             _controller.Connect(UseSimulation ? "sim" : SelectedPort!);
-            _controller.StartPolling();
+            int pollHz = CurrentPollHz;
+            _controller.StartPolling(1000 / pollHz);
             _manualDisconnect = false;
             _lastConnectedPort = SelectedPort;
             SaveConfig();
-            AppendLog(UseSimulation ? "仿真已启动，状态刷新 20Hz" : "已连接串口，状态轮询 20Hz");
+            AppendLog(UseSimulation
+                ? $"仿真已启动，状态刷新 {pollHz}Hz"
+                : $"已连接串口，状态轮询 {pollHz}Hz");
         }
         catch (Exception ex)
         {
@@ -1011,9 +1040,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
             try
             {
                 _controller.Connect("sim");
-                _controller.StartPolling();
+                int pollHz = SimulationPollHz;
+                _controller.StartPolling(1000 / pollHz);
                 _manualDisconnect = false;
-                AppendLog("已切换到内置仿真并启动（状态刷新 20Hz）");
+                AppendLog($"已切换到内置仿真并启动（状态刷新 {pollHz}Hz）");
             }
             catch (Exception ex)
             {
@@ -1413,9 +1443,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
         }
 
         int[] signs = signValues.Select(v => v >= 0 ? 1 : -1).ToArray();
+        HardwarePollHzInput = HardwarePollHz.ToString(CultureInfo.InvariantCulture);
+        SimulationPollHzInput = SimulationPollHz.ToString(CultureInfo.InvariantCulture);
         _client.Configure(baud, prefix, queryTimeout, motionTimeout, queryTimeout);
         _controller.Configure(offset, signs, slowTimeout);
         ConfigureCollisionPlanner(log);
+        ApplyPollInterval(log);
 
         SaveConfig();
         if (log)
@@ -1439,6 +1472,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
         CollisionRadiusInput = config.CollisionRadiusInput;
         CollisionMarginInput = config.CollisionMarginInput;
         CollisionGroundInput = config.CollisionGroundInput;
+        HardwarePollHzInput = config.HardwarePollHzInput;
+        SimulationPollHzInput = config.SimulationPollHzInput;
         MaxVelocityInput = config.MaxVelocityInput;
         MaxAccelInput = config.MaxAccelInput;
         BaudRateInput = config.BaudRateInput;
@@ -1487,6 +1522,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
             CollisionRadiusInput = CollisionRadiusInput,
             CollisionMarginInput = CollisionMarginInput,
             CollisionGroundInput = CollisionGroundInput,
+            HardwarePollHzInput = HardwarePollHzInput,
+            SimulationPollHzInput = SimulationPollHzInput,
             MaxVelocityInput = MaxVelocityInput,
             MaxAccelInput = MaxAccelInput,
             BaudRateInput = BaudRateInput,
@@ -1621,11 +1658,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
                         ApplySettings(false);
                         _client.Open(_lastConnectedPort!);
                         _controller.State.IsConnected = true;
-                        _controller.StartPolling();
+                        int pollHz = HardwarePollHz;
+                        _controller.StartPolling(1000 / pollHz);
                         DispatchIfNeeded(() =>
                         {
                             UpdateConnectionState();
-                            AppendLog($"已自动重连 {_lastConnectedPort}");
+                            AppendLog($"已自动重连 {_lastConnectedPort}，状态轮询 {pollHz}Hz");
                         });
                     }
                     catch
@@ -1736,6 +1774,31 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
     private static int ToIndex(object? parameter)
     {
         return parameter is int index ? index : -1;
+    }
+
+    private int HardwarePollHz => ParsePollHz(HardwarePollHzInput, 10, 1, 30);
+    private int SimulationPollHz => ParsePollHz(SimulationPollHzInput, 50, 1, 100);
+    private int CurrentPollHz => UseSimulation ? SimulationPollHz : HardwarePollHz;
+    private int CurrentPollIntervalMs => 1000 / CurrentPollHz;
+
+    private static int ParsePollHz(string text, int fallback, int min, int max)
+    {
+        return int.TryParse(text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int hz)
+               && hz >= min && hz <= max
+            ? hz
+            : fallback;
+    }
+
+    private void ApplyPollInterval(bool log)
+    {
+        if (!_controller.IsConnected)
+            return;
+
+        int hz = CurrentPollHz;
+        _controller.StopPolling();
+        _controller.StartPolling(1000 / hz);
+        if (log)
+            AppendLog($"轮询频率已更新为 {hz}Hz");
     }
 
     private void ConfigureCollisionPlanner(bool log)

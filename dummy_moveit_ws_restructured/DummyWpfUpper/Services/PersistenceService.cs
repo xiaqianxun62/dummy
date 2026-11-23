@@ -19,6 +19,8 @@ public sealed class AppConfig
     public string CollisionRadiusInput { get; set; } = "45,20,25,20,25,30,20";
     public string CollisionMarginInput { get; set; } = "0,0,0,0,0,0,0";
     public string CollisionGroundInput { get; set; } = "-20,-20,-20,-20,-20,-20,-20";
+    public string HardwarePollHzInput { get; set; } = "10";
+    public string SimulationPollHzInput { get; set; } = "50";
     public string MaxVelocityInput { get; set; } = "30";
     public string MaxAccelInput { get; set; } = "60";
     public string BaudRateInput { get; set; } = "115200";

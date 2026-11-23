@@ -214,12 +214,14 @@ public partial class Robot3DWindow : Window
         int count = 0;
         if (planned is { Count: >= 2 })
         {
-            AddPathToGroup(planned, _plannedPathGroup, Colors.OrangeRed, 0.0035);
+            AddPathToGroup(InterpolateForDisplay(planned), _plannedPathGroup,
+                Colors.OrangeRed, 0.0035, planned);
             count += planned.Count;
         }
         if (taught is { Count: >= 2 })
         {
-            AddPathToGroup(taught, _taughtPathGroup, Colors.Cyan, 0.0025);
+            AddPathToGroup(InterpolateForDisplay(taught), _taughtPathGroup,
+                Colors.Cyan, 0.0025, taught);
             count += taught.Count;
         }
 
@@ -228,8 +230,27 @@ public partial class Robot3DWindow : Window
             : "未加载路径";
     }
 
+    private static IReadOnlyList<double[]> InterpolateForDisplay(IReadOnlyList<double[]> waypoints)
+    {
+        const int stepsPerSegment = 12;
+        if (waypoints.Count < 2 || waypoints.Count > 200)
+            return waypoints;
+
+        var result = new List<double[]>();
+        for (int i = 0; i < waypoints.Count - 1; i++)
+        {
+            List<double[]> segment = RobotController.InterpolateJointPath(
+                waypoints[i], waypoints[i + 1], stepsPerSegment);
+            int from = i == 0 ? 0 : 1;
+            for (int s = from; s < segment.Count; s++)
+                result.Add(segment[s]);
+        }
+        return result;
+    }
+
     private void AddPathToGroup(IReadOnlyList<double[]> jointsPath,
-        Model3DGroup group, Color color, double radius)
+        Model3DGroup group, Color color, double radius,
+        IReadOnlyList<double[]>? markerWaypoints = null)
     {
         var points = new Point3D[jointsPath.Count];
         for (int i = 0; i < jointsPath.Count; i++)
@@ -237,7 +258,7 @@ public partial class Robot3DWindow : Window
 
         var tubeMaterial = new DiffuseMaterial(new SolidColorBrush(color));
 
-        // 相邻点之间画细管；点本身画八面体标记
+        // 相邻点之间画细管；原始路径点画八面体标记
         for (int i = 0; i < points.Length - 1; i++)
         {
             Model3D? segment = CreateTube(points[i], points[i + 1], radius, tubeMaterial);
@@ -245,16 +266,28 @@ public partial class Robot3DWindow : Window
                 group.Children.Add(segment);
         }
 
-        var startMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.LimeGreen));
-        var endMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Crimson));
+        var markers = markerWaypoints ?? jointsPath;
+        var markerPoints = new Point3D[markers.Count];
+        for (int i = 0; i < markers.Count; i++)
+            markerPoints[i] = ComputeToolPoint(markers[i]);
+
+        var startMaterial = new MaterialGroup();
+        startMaterial.Children.Add(new DiffuseMaterial(new SolidColorBrush(Colors.LimeGreen)));
+        startMaterial.Children.Add(new EmissiveMaterial(new SolidColorBrush(Colors.LimeGreen)));
+
+        var endMaterial = new MaterialGroup();
+        endMaterial.Children.Add(new DiffuseMaterial(new SolidColorBrush(Colors.Crimson)));
+        endMaterial.Children.Add(new EmissiveMaterial(new SolidColorBrush(Colors.Crimson)));
+
         var midMaterial = new DiffuseMaterial(new SolidColorBrush(color));
 
-        for (int i = 0; i < points.Length; i++)
+        for (int i = 0; i < markerPoints.Length; i++)
         {
+            bool isEndpoint = i == 0 || i == markerPoints.Length - 1;
             Material markerMat = i == 0 ? startMaterial
-                : i == points.Length - 1 ? endMaterial : midMaterial;
-            group.Children.Add(CreateOctahedron(points[i],
-                i == 0 || i == points.Length - 1 ? radius * 2.2 : radius * 1.6, markerMat));
+                : i == markerPoints.Length - 1 ? endMaterial : midMaterial;
+            group.Children.Add(CreateOctahedron(markerPoints[i],
+                isEndpoint ? radius * 6 : radius * 1.6, markerMat));
         }
     }
 

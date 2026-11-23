@@ -146,6 +146,14 @@
                     <TextBlock Text="离地高度(mm)" Width="88" ToolTip="L0~L6 七段各自的最低允许 Z 值" />
                     <TextBox Width="210" Text="{Binding CollisionGroundInput, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="4">
+                    <TextBlock Text="真机轮询(Hz)" Width="88" ToolTip="串口真机状态轮询频率，范围 1~30" />
+                    <TextBox Width="70" Text="{Binding HardwarePollHzInput, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="4">
+                    <TextBlock Text="仿真轮询(Hz)" Width="88" ToolTip="内置仿真状态轮询频率，范围 1~100" />
+                    <TextBox Width="70" Text="{Binding SimulationPollHzInput, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
                 <Button Content="应用设置" Command="{Binding ApplySettingsCommand}" Margin="12,4,4,4" />
                 <CheckBox Content="断线自动重连" IsChecked="{Binding AutoReconnect}" Margin="16,4,4,4" />
                 <Separator Width="12" />
