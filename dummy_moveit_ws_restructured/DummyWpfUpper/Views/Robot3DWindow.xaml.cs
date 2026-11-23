@@ -70,7 +70,10 @@ public partial class Robot3DWindow : Window
     private readonly Model3DGroup _pathRoot = new();
     private readonly Model3DGroup _plannedPathGroup = new();
     private readonly Model3DGroup _taughtPathGroup = new();
+    private readonly object _poseLock = new();
+    private double[]? _latestJointsDeg;
 
+    private readonly System.Windows.Threading.DispatcherTimer _poseTimer;
     private System.Windows.Threading.DispatcherTimer? _previewTimer;
     private List<double[]>? _previewPath;
     private int _previewIndex;
@@ -93,6 +96,12 @@ public partial class Robot3DWindow : Window
         UpdateCamera();
         BuildScene();
         UpdatePose();
+        _poseTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(33)
+        };
+        _poseTimer.Tick += PoseTimer_Tick;
+        _poseTimer.Start();
         _controller.StateUpdated += OnStateUpdated;
         if (_pathProvider is not null)
             _pathProvider.PathsChanged += OnPathsChanged;
@@ -150,10 +159,31 @@ public partial class Robot3DWindow : Window
 
     private void UpdatePose()
     {
-        if (_controller.State.JointsDeg.Length != 6)
+        ApplyJointAngles(_controller.State.JointsDeg);
+    }
+
+    private void PoseTimer_Tick(object? sender, EventArgs e)
+    {
+        if (_previewing)
             return;
 
-        double[] rosRad = _controller.FirmwareDegToRosRad(_controller.State.JointsDeg);
+        double[]? joints;
+        lock (_poseLock)
+        {
+            joints = _latestJointsDeg;
+            _latestJointsDeg = null;
+        }
+
+        if (joints is not null)
+            ApplyJointAngles(joints);
+    }
+
+    private void ApplyJointAngles(double[] jointsDeg)
+    {
+        if (jointsDeg.Length != 6)
+            return;
+
+        double[] rosRad = _controller.FirmwareDegToRosRad(jointsDeg);
         for (int i = 0; i < 6; i++)
             _rotations[i].Angle = rosRad[i] * 180.0 / Math.PI;
     }
@@ -162,7 +192,9 @@ public partial class Robot3DWindow : Window
     {
         if (_previewing)
             return;
-        Dispatcher.BeginInvoke(new Action(UpdatePose));
+
+        lock (_poseLock)
+            _latestJointsDeg = (double[])state.JointsDeg.Clone();
     }
 
     // ---------- 路径可视化 ----------
@@ -372,6 +404,8 @@ public partial class Robot3DWindow : Window
         _poseBeforePreview = (double[])_controller.State.JointsDeg.Clone();
         _previewIndex = 0;
         _previewing = true;
+        lock (_poseLock)
+            _latestJointsDeg = null;
         PreviewButton.Content = "停止预览";
         ApplyPreviewPose(_previewPath[0]);
 
@@ -486,6 +520,7 @@ public partial class Robot3DWindow : Window
     {
         if (_previewing)
             StopPreview();
+        _poseTimer.Stop();
         _controller.StateUpdated -= OnStateUpdated;
         if (_pathProvider is not null)
             _pathProvider.PathsChanged -= OnPathsChanged;

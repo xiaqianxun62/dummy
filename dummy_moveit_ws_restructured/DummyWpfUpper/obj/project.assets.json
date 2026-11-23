@@ -233,31 +233,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Administrator\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\VOS-User\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Administrator\\Desktop\\Badminton\\dummy\\dummy_moveit_ws_restructured\\DummyWpfUpper\\DummyWpfUpper.csproj",
+      "projectUniqueName": "C:\\Users\\VOS-User\\Desktop\\el\\dummy\\dummy_moveit_ws_restructured\\DummyWpfUpper\\DummyWpfUpper.csproj",
       "projectName": "DummyWpfUpper",
-      "projectPath": "C:\\Users\\Administrator\\Desktop\\Badminton\\dummy\\dummy_moveit_ws_restructured\\DummyWpfUpper\\DummyWpfUpper.csproj",
-      "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Administrator\\Desktop\\Badminton\\dummy\\dummy_moveit_ws_restructured\\DummyWpfUpper\\obj\\",
+      "projectPath": "C:\\Users\\VOS-User\\Desktop\\el\\dummy\\dummy_moveit_ws_restructured\\DummyWpfUpper\\DummyWpfUpper.csproj",
+      "packagesPath": "C:\\Users\\VOS-User\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\VOS-User\\Desktop\\el\\dummy\\dummy_moveit_ws_restructured\\DummyWpfUpper\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\VOS-User\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0-windows"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -300,24 +293,6 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[8.0.31, 8.0.31]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Host.win-x64",
-            "version": "[8.0.31, 8.0.31]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Ref",
-            "version": "[8.0.31, 8.0.31]"
-          },
-          {
-            "name": "Microsoft.WindowsDesktop.App.Ref",
-            "version": "[8.0.31, 8.0.31]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"

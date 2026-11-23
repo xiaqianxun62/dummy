@@ -26,6 +26,8 @@ public sealed class RobotController : IRobotBackend
     private DateTime _lastJointSampleTime;
     private double[]? _lastJointTarget;
     private double[]? _lastPoseTarget;
+    private bool? _lastJointPollOk;
+    private bool? _lastPosePollOk;
 
     public RobotState State { get; } = new();
 
@@ -56,6 +58,8 @@ public sealed class RobotController : IRobotBackend
         _lastJointSample = null;
         _lastJointTarget = null;
         _lastPoseTarget = null;
+        _lastJointPollOk = null;
+        _lastPosePollOk = null;
         State.IsConnected = true;
         Log?.Invoke($"已连接 {portName}");
     }
@@ -82,6 +86,8 @@ public sealed class RobotController : IRobotBackend
         State.QueueSpace = -1;
         _lastJointTarget = null;
         _lastPoseTarget = null;
+        _lastJointPollOk = null;
+        _lastPosePollOk = null;
         Log?.Invoke("已断开串口");
     }
 
@@ -99,35 +105,7 @@ public sealed class RobotController : IRobotBackend
             {
                 while (!token.IsCancellationRequested)
                 {
-                    try
-                    {
-                        if (_client.IsOpen)
-                        {
-                            double[] joints = _client.GetJointPositions();
-                            DateTime now = DateTime.UtcNow;
-                            if (_lastJointSample is not null)
-                            {
-                                double dt = (now - _lastJointSampleTime).TotalSeconds;
-                                if (dt > 1e-3)
-                                {
-                                    var velocities = new double[6];
-                                    for (int i = 0; i < 6; i++)
-                                        velocities[i] = (joints[i] - _lastJointSample[i]) / dt;
-                                    State.JointVelocitiesDegPerSec = velocities;
-                                }
-                            }
-                            _lastJointSample = (double[])joints.Clone();
-                            _lastJointSampleTime = now;
-                            State.JointsDeg = joints;
-                            State.Pose = _client.GetLinearPose();
-                            StateUpdated?.Invoke(State);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log?.Invoke($"状态轮询失败: {ex.Message}");
-                    }
-
+                    PollStateOnce();
                     await Task.Delay(intervalMs, token).ConfigureAwait(false);
                 }
             }
@@ -136,6 +114,57 @@ public sealed class RobotController : IRobotBackend
                 // 正常停止轮询
             }
         }, token);
+    }
+
+    private void PollStateOnce()
+    {
+        if (!_client.IsOpen)
+            return;
+
+        try
+        {
+            double[] joints = _client.GetJointPositions();
+            DateTime now = DateTime.UtcNow;
+            if (_lastJointSample is not null)
+            {
+                double dt = (now - _lastJointSampleTime).TotalSeconds;
+                if (dt > 1e-3)
+                {
+                    var velocities = new double[6];
+                    for (int i = 0; i < 6; i++)
+                        velocities[i] = (joints[i] - _lastJointSample[i]) / dt;
+                    State.JointVelocitiesDegPerSec = velocities;
+                }
+            }
+            _lastJointSample = (double[])joints.Clone();
+            _lastJointSampleTime = now;
+            State.JointsDeg = joints;
+            if (_lastJointPollOk == false)
+                Log?.Invoke("关节状态读取已恢复");
+            _lastJointPollOk = true;
+        }
+        catch (Exception ex)
+        {
+            if (_lastJointPollOk != false)
+                Log?.Invoke($"关节状态轮询失败: {ex.Message}");
+            _lastJointPollOk = false;
+        }
+
+        try
+        {
+            State.Pose = _client.GetLinearPose();
+            if (_lastPosePollOk == false)
+                Log?.Invoke("末端位姿读取已恢复");
+            _lastPosePollOk = true;
+        }
+        catch (Exception ex)
+        {
+            if (_lastPosePollOk != false)
+                Log?.Invoke($"末端位姿轮询失败: {ex.Message}");
+            _lastPosePollOk = false;
+        }
+
+        StateUpdated?.Invoke(State);
     }
 
     public void StopPolling()

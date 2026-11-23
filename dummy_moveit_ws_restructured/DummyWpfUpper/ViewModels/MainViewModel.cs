@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using System.Windows.Threading;
 using DummyWpfUpper.Models;
 using DummyWpfUpper.Services;
 
@@ -123,6 +124,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
     private string _maxAccelInput = "60";
     private string _collisionText = "未检查";
     private string _velocityText = "--";
+    private readonly object _stateUiLock = new();
+    private RobotState? _latestState;
+    private readonly DispatcherTimer _stateUiTimer;
     private bool _autoReconnect = true;
     private bool _manualDisconnect;
     private string? _lastConnectedPort;
@@ -141,6 +145,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
 
     public MainViewModel()
     {
+        _stateUiTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(100)
+        };
+        _stateUiTimer.Tick += StateUiTimer_Tick;
+        _stateUiTimer.Start();
+
         _client = new SerialAsciiClient();
         _backendLogHandler = message => AppendLog(message);
         _backendStateHandler = state => OnStateUpdated(state);
@@ -1696,14 +1707,37 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
 
     private void OnStateUpdated(RobotState state)
     {
-        void Update()
+        lock (_stateUiLock)
+            _latestState = CloneState(state);
+    }
+
+    private void StateUiTimer_Tick(object? sender, EventArgs e)
+    {
+        RobotState? state;
+        lock (_stateUiLock)
         {
-            JointText = string.Join("   ", state.JointsDeg.Select(v => v.ToString("F1", CultureInfo.InvariantCulture)));
-            VelocityText = string.Join("   ", state.JointVelocitiesDegPerSec.Select(v => v.ToString("F1", CultureInfo.InvariantCulture)));
-            PoseText = string.Join("   ", state.Pose.Select(v => v.ToString("F1", CultureInfo.InvariantCulture)));
+            state = _latestState;
+            _latestState = null;
         }
 
-        DispatchIfNeeded(Update);
+        if (state is null)
+            return;
+
+        JointText = string.Join("   ", state.JointsDeg.Select(v => v.ToString("F1", CultureInfo.InvariantCulture)));
+        VelocityText = string.Join("   ", state.JointVelocitiesDegPerSec.Select(v => v.ToString("F1", CultureInfo.InvariantCulture)));
+        PoseText = string.Join("   ", state.Pose.Select(v => v.ToString("F1", CultureInfo.InvariantCulture)));
+    }
+
+    private static RobotState CloneState(RobotState state)
+    {
+        return new RobotState
+        {
+            JointsDeg = (double[])state.JointsDeg.Clone(),
+            JointVelocitiesDegPerSec = (double[])state.JointVelocitiesDegPerSec.Clone(),
+            Pose = (double[])state.Pose.Clone(),
+            QueueSpace = state.QueueSpace,
+            IsConnected = state.IsConnected
+        };
     }
 
     private void AppendLog(string message)

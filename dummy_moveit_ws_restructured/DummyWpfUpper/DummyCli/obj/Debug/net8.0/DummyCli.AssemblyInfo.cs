@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DummyCli")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9fb719e64293c505f9d944bef556d2b1a608281e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2e78b828594ac014d19de25e788d931fb92aecd4")]
 [assembly: System.Reflection.AssemblyProductAttribute("DummyCli")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DummyCli")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

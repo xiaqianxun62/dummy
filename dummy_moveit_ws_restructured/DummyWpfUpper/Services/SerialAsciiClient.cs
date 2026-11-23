@@ -118,43 +118,43 @@ public sealed class SerialAsciiClient : IDisposable
         }
     }
 
+    private string SendQuery(string command, int expectedValueCount, int? timeoutMs)
+    {
+        int timeout = timeoutMs ?? _defaultQueryTimeoutMs;
+        bool IsValid(string line) => line.StartsWith("ok ", StringComparison.Ordinal)
+                                     && ParseValues(line).Count == expectedValueCount;
+
+        try
+        {
+            return SendAndWait(command, timeout, IsValid);
+        }
+        catch (TimeoutException)
+        {
+            return SendAndWait(command, timeout, IsValid);
+        }
+    }
+
     public double[] GetJointPositions(int? timeoutMs = null)
     {
-        string line = SendAndWait(
-            "#GETJPOS",
-            timeoutMs ?? _defaultQueryTimeoutMs,
-            l => l.StartsWith("ok ", StringComparison.Ordinal) && ParseValues(l).Count == 6);
-
+        string line = SendQuery("#GETJPOS", 6, timeoutMs);
         return ParseValues(line).ToArray();
     }
 
     public double[] GetLinearPose(int? timeoutMs = null)
     {
-        string line = SendAndWait(
-            "#GETLPOS",
-            timeoutMs ?? _defaultQueryTimeoutMs,
-            l => l.StartsWith("ok ", StringComparison.Ordinal) && ParseValues(l).Count == 6);
-
+        string line = SendQuery("#GETLPOS", 6, timeoutMs);
         return ParseValues(line).ToArray();
     }
 
     public double[] GetHomeOffset(int? timeoutMs = null)
     {
-        string line = SendAndWait(
-            "#GET_HOME_OFFSET",
-            timeoutMs ?? _defaultQueryTimeoutMs,
-            l => l.StartsWith("ok ", StringComparison.Ordinal) && ParseValues(l).Count == 6);
-
+        string line = SendQuery("#GET_HOME_OFFSET", 6, timeoutMs);
         return ParseValues(line).ToArray();
     }
 
     public double[] GetBasePosition(int? timeoutMs = null)
     {
-        string line = SendAndWait(
-            "#GET_BASE_POS",
-            timeoutMs ?? _defaultQueryTimeoutMs,
-            l => l.StartsWith("ok ", StringComparison.Ordinal) && ParseValues(l).Count == 3);
-
+        string line = SendQuery("#GET_BASE_POS", 3, timeoutMs);
         return ParseValues(line).ToArray();
     }
 

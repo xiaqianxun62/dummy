@@ -49,7 +49,6 @@ void OnUsbAsciiCmd(const char* _cmd, size_t _len, StreamSink &_responseChannel)
                     dummy.currentJoints.a[4], dummy.currentJoints.a[5]);
         } else if (s.find("GETLPOS") != std::string::npos)
         {
-            dummy.UpdateJointPose6D();
             Respond(_responseChannel, "ok %.2f %.2f %.2f %.2f %.2f %.2f",
                     dummy.currentPose6D.X, dummy.currentPose6D.Y,
                     dummy.currentPose6D.Z, dummy.currentPose6D.A,
@@ -62,7 +61,6 @@ void OnUsbAsciiCmd(const char* _cmd, size_t _len, StreamSink &_responseChannel)
                     dummy.initPose.a[4], dummy.initPose.a[5]);
         } else if (s.find("GET_BASE_POS") != std::string::npos)
         {
-            dummy.UpdateJointPose6D();
             Respond(_responseChannel, "ok %.2f %.2f %.2f",
                     dummy.currentPose6D.X, dummy.currentPose6D.Y, dummy.currentPose6D.Z);
         } else if (s.find("SET_DCE_KP") != std::string::npos)
@@ -133,7 +131,7 @@ void OnUsbAsciiCmd(const char* _cmd, size_t _len, StreamSink &_responseChannel)
 void OnUart4AsciiCmd(const char* _cmd, size_t _len, StreamSink &_responseChannel)
 {
     /*---------------------------- ↓ Add Your CMDs Here ↓ -----------------------------*/
-    if (_cmd[0] == '!' || !dummy.IsEnabled())
+    if (_cmd[0] == '!')
     {
         std::string s(_cmd);
         if (s.find("STOP") != std::string::npos)
@@ -176,7 +174,6 @@ void OnUart4AsciiCmd(const char* _cmd, size_t _len, StreamSink &_responseChannel
                     dummy.currentJoints.a[4], dummy.currentJoints.a[5]);
         } else if (s.find("GETLPOS") != std::string::npos)
         {
-            dummy.UpdateJointPose6D();
             Respond(_responseChannel, "ok %.2f %.2f %.2f %.2f %.2f %.2f",
                     dummy.currentPose6D.X, dummy.currentPose6D.Y,
                     dummy.currentPose6D.Z, dummy.currentPose6D.A,
@@ -189,7 +186,6 @@ void OnUart4AsciiCmd(const char* _cmd, size_t _len, StreamSink &_responseChannel
                     dummy.initPose.a[4], dummy.initPose.a[5]);
         } else if (s.find("GET_BASE_POS") != std::string::npos)
         {
-            dummy.UpdateJointPose6D();
             Respond(_responseChannel, "ok %.2f %.2f %.2f",
                     dummy.currentPose6D.X, dummy.currentPose6D.Y, dummy.currentPose6D.Z);
         } else if (s.find("CMDMODE") != std::string::npos)
@@ -200,7 +196,7 @@ void OnUart4AsciiCmd(const char* _cmd, size_t _len, StreamSink &_responseChannel
             Respond(_responseChannel, "Set command mode to [%lu]", mode);
         } else
             Respond(_responseChannel, "ok");
-    } else if (_cmd[0] == '>' || _cmd[0] == '@' || _cmd[0] == '&')
+    } else if (dummy.IsEnabled() && (_cmd[0] == '>' || _cmd[0] == '@' || _cmd[0] == '&'))
     {
         uint32_t freeSize = dummy.commandHandler.Push(_cmd);
         Respond(_responseChannel, "%d", freeSize);
