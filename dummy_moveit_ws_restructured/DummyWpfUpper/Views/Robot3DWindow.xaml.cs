@@ -62,11 +62,19 @@ public partial class Robot3DWindow : Window
         Colors.Gold
     };
 
+    private static readonly Material GhostMaterial =
+        new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(90, 255, 165, 0)));
+    private static readonly Dictionary<int, MeshGeometry3D> MeshCache = new();
+
     private readonly IRobotBackend _controller;
     private readonly IRobotPathProvider? _pathProvider;
+    private readonly IRobotTargetProvider? _targetProvider;
     private readonly AxisAngleRotation3D[] _rotations = new AxisAngleRotation3D[6];
+    private readonly AxisAngleRotation3D[] _targetRotations = new AxisAngleRotation3D[6];
     private readonly PerspectiveCamera _camera;
     private readonly Dof6Kinematics _kinematics = Dof6Kinematics.CreateDefault();
+    private readonly Model3DGroup _ghostRoot = new();
+    private Model3DGroup _sceneRoot = new();
     private readonly Model3DGroup _pathRoot = new();
     private readonly Model3DGroup _plannedPathGroup = new();
     private readonly Model3DGroup _taughtPathGroup = new();
@@ -87,15 +95,19 @@ public partial class Robot3DWindow : Window
     private double _distance = 1.15;
     private Vector3D _lookAt = new(0, 0, 0.10);
 
-    public Robot3DWindow(IRobotBackend controller, IRobotPathProvider? pathProvider = null)
+    public Robot3DWindow(IRobotBackend controller,
+        IRobotPathProvider? pathProvider = null,
+        IRobotTargetProvider? targetProvider = null)
     {
         _controller = controller;
         _pathProvider = pathProvider;
+        _targetProvider = targetProvider;
         InitializeComponent();
         _camera = (PerspectiveCamera)Viewport.Camera;
         UpdateCamera();
         BuildScene();
         UpdatePose();
+        UpdateTargetPose();
         _poseTimer = new System.Windows.Threading.DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(33)
@@ -105,35 +117,24 @@ public partial class Robot3DWindow : Window
         _controller.StateUpdated += OnStateUpdated;
         if (_pathProvider is not null)
             _pathProvider.PathsChanged += OnPathsChanged;
+        if (_targetProvider is not null)
+            _targetProvider.TargetChanged += OnTargetChanged;
         RefreshPaths();
         Closed += OnClosed;
     }
 
     private void BuildScene()
     {
-        var root = new Model3DGroup();
-        root.Transform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 180));
-
-        var baseGroup = new Model3DGroup();
-        baseGroup.Children.Add(CreateLinkModel(0));
-        root.Children.Add(baseGroup);
-
-        Model3DGroup parent = baseGroup;
-        for (int i = 0; i < 6; i++)
+        var root = new Model3DGroup
         {
-            var transform = new Transform3DGroup();
-            // URDF joint 语义：先绕关节轴旋转，再平移到关节原点 (T(J)*R)。
-            // Transform3DGroup 按添加顺序应用，必须先放 Rotate 再放 Translate，
-            // 否则关节原点会被一起旋转 (变成 R*(p+J))，导致连杆"散架"。
-            _rotations[i] = new AxisAngleRotation3D(JointAxis[i], 0);
-            transform.Children.Add(new RotateTransform3D(_rotations[i]));
-            transform.Children.Add(new TranslateTransform3D(JointOrigin[i]));
+            Transform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 180))
+        };
+        _sceneRoot = root;
 
-            var linkGroup = new Model3DGroup { Transform = transform };
-            linkGroup.Children.Add(CreateLinkModel(i + 1));
-            parent.Children.Add(linkGroup);
-            parent = linkGroup;
-        }
+        BuildRobotChain(root, _rotations,
+            index => new DiffuseMaterial(new SolidColorBrush(LinkColors[index])));
+        BuildRobotChain(_ghostRoot, _targetRotations, _ => GhostMaterial);
+        root.Children.Add(_ghostRoot);
 
         // 路径可视化层：与机器人共用 root 坐标系（已含 world_joint Rz180）
         _plannedPathGroup.Transform = Transform3D.Identity;
@@ -145,16 +146,44 @@ public partial class Robot3DWindow : Window
         RobotRoot.Content = root;
     }
 
-    private static Model3D CreateLinkModel(int index)
+    private void BuildRobotChain(Model3DGroup root,
+        AxisAngleRotation3D[] rotations, Func<int, Material> materialFactory)
     {
-        string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Meshes", MeshFiles[index]);
-        MeshGeometry3D mesh = StlMeshLoader.Load(path);
-        var material = new DiffuseMaterial(new SolidColorBrush(LinkColors[index]));
-        var model = new GeometryModel3D(mesh, material)
+        var baseGroup = new Model3DGroup();
+        baseGroup.Children.Add(CreateLinkModel(0, materialFactory(0)));
+        root.Children.Add(baseGroup);
+
+        Model3DGroup parent = baseGroup;
+        for (int i = 0; i < 6; i++)
+        {
+            var transform = new Transform3DGroup();
+            // URDF joint 语义：先绕关节轴旋转，再平移到关节原点 (T(J)*R)。
+            // Transform3DGroup 按添加顺序应用，必须先放 Rotate 再放 Translate，
+            // 否则关节原点会被一起旋转 (变成 R*(p+J))，导致连杆"散架"。
+            rotations[i] = new AxisAngleRotation3D(JointAxis[i], 0);
+            transform.Children.Add(new RotateTransform3D(rotations[i]));
+            transform.Children.Add(new TranslateTransform3D(JointOrigin[i]));
+
+            var linkGroup = new Model3DGroup { Transform = transform };
+            linkGroup.Children.Add(CreateLinkModel(i + 1, materialFactory(i + 1)));
+            parent.Children.Add(linkGroup);
+            parent = linkGroup;
+        }
+    }
+
+    private static Model3D CreateLinkModel(int index, Material material)
+    {
+        if (!MeshCache.TryGetValue(index, out MeshGeometry3D? mesh))
+        {
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Meshes", MeshFiles[index]);
+            mesh = StlMeshLoader.Load(path);
+            MeshCache[index] = mesh;
+        }
+
+        return new GeometryModel3D(mesh, material)
         {
             Transform = new TranslateTransform3D(LinkVisualOffset[index])
         };
-        return model;
     }
 
     private void UpdatePose()
@@ -186,6 +215,28 @@ public partial class Robot3DWindow : Window
         double[] rosRad = _controller.FirmwareDegToRosRad(jointsDeg);
         for (int i = 0; i < 6; i++)
             _rotations[i].Angle = rosRad[i] * 180.0 / Math.PI;
+    }
+
+    private void UpdateTargetPose()
+    {
+        double[]? target = _targetProvider?.TargetJointsFwDeg;
+        if (target is null || target.Length != 6)
+        {
+            _sceneRoot.Children.Remove(_ghostRoot);
+            return;
+        }
+
+        if (!_sceneRoot.Children.Contains(_ghostRoot))
+            _sceneRoot.Children.Add(_ghostRoot);
+
+        double[] rosRad = _controller.FirmwareDegToRosRad(target);
+        for (int i = 0; i < 6; i++)
+            _targetRotations[i].Angle = rosRad[i] * 180.0 / Math.PI;
+    }
+
+    private void OnTargetChanged()
+    {
+        Dispatcher.BeginInvoke(new Action(UpdateTargetPose));
     }
 
     private void OnStateUpdated(Models.RobotState state)
@@ -524,5 +575,7 @@ public partial class Robot3DWindow : Window
         _controller.StateUpdated -= OnStateUpdated;
         if (_pathProvider is not null)
             _pathProvider.PathsChanged -= OnPathsChanged;
+        if (_targetProvider is not null)
+            _targetProvider.TargetChanged -= OnTargetChanged;
     }
 }

@@ -3,14 +3,15 @@ using DummyWpfUpper.Services;
 using DummyWpfUpper.ViewModels;
 
 MethodInfo parse = typeof(MainViewModel).GetMethod(
-    "ParsePollHz", BindingFlags.NonPublic | BindingFlags.Static)!;
+    "TryParseSix", BindingFlags.NonPublic | BindingFlags.Static)!;
 
-object Check(string input, int fallback, int min, int max) =>
-    parse.Invoke(null, new object[] { input, fallback, min, max })!;
+object[] validArgs = { "10,-20,30,40,50,60", Array.Empty<double>() };
+bool valid = (bool)parse.Invoke(null, validArgs)!;
+Console.WriteLine($"valid={valid} values={string.Join(",", (double[])validArgs[1])}");
 
-Console.WriteLine($"sim60={Check("60", 50, 1, 100)}");
-Console.WriteLine($"sim200={Check("200", 50, 1, 100)}");
-Console.WriteLine($"hwBad={Check("abc", 10, 1, 30)}");
+object[] invalidArgs = { "bad", Array.Empty<double>() };
+bool invalid = (bool)parse.Invoke(null, invalidArgs)!;
+Console.WriteLine($"invalidAccepted={invalid}");
 
-var config = new AppConfig();
-Console.WriteLine($"defaults={config.HardwarePollHzInput}/{config.SimulationPollHzInput}Hz");
+bool implements = typeof(MainViewModel).GetInterfaces().Contains(typeof(IRobotTargetProvider));
+Console.WriteLine($"implementsTargetProvider={implements}");

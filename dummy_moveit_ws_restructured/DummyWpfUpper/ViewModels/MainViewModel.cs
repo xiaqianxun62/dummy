@@ -11,9 +11,10 @@ using DummyWpfUpper.Services;
 
 namespace DummyWpfUpper.ViewModels;
 
-public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
+public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider, IRobotTargetProvider
 {
     public event Action? PathsChanged;
+    public event Action? TargetChanged;
 
     public IReadOnlyList<double[]>? PlannedPath => _plannedPath.Count >= 2
         ? _plannedPath.Select(p => (double[])p.Clone()).ToList()
@@ -21,6 +22,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
 
     public IReadOnlyList<double[]>? TaughtPath => _taughtPoints.Count >= 2
         ? _taughtPoints.Select(p => (double[])p.Clone()).ToList()
+        : null;
+
+    public double[]? TargetJointsFwDeg => TryParseSix(JointTargetInput, out double[] target)
+        ? target
         : null;
 
     private readonly SerialAsciiClient _client;
@@ -382,6 +387,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IRobotPathProvider
                 return;
             _jointTargetInput = value;
             OnPropertyChanged();
+            TargetChanged?.Invoke();
         }
     }
 

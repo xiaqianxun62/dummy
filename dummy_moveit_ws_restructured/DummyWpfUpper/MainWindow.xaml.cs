@@ -45,6 +45,6 @@ public partial class MainWindow : Window
 
     private void Open3DView_Click(object sender, RoutedEventArgs e)
     {
-        new Robot3DWindow(Vm.Controller, Vm).Show();
+        new Robot3DWindow(Vm.Controller, Vm, Vm).Show();
     }
 }
