@@ -6,6 +6,9 @@ public sealed record TrajectoryPoint(double[] JointsFwDeg, double DelayMs);
 
 public sealed record CollisionInfo(string Description);
 
+/// <summary>
+/// 轨迹规划器，用于规划关节轨迹。
+/// </summary>
 public sealed class TrajectoryPlanner
 {
     private static readonly Vector3[] JointOrigin =

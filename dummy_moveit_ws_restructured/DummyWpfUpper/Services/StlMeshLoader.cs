@@ -6,6 +6,9 @@ using System.Windows.Media.Media3D;
 
 namespace DummyWpfUpper.Services;
 
+/// <summary>
+/// 加载 STL 网格。
+/// </summary>
 public static class StlMeshLoader
 {
     public static MeshGeometry3D Load(string path, double scale = 0.001)

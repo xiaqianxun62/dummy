@@ -4,6 +4,9 @@ using System.Text;
 
 namespace DummyWpfUpper.Services;
 
+/// <summary>
+/// 串口 ASCII 客户端。
+/// </summary>
 public sealed class SerialAsciiClient : IDisposable
 {
     private readonly object _sync = new();

@@ -1,7 +1,9 @@
 using DummyWpfUpper.Models;
 
 namespace DummyWpfUpper.Services;
-
+/// <summary>
+/// 串口直连机器人控制器。
+/// </summary>
 public sealed class RobotController : IRobotBackend
 {
     private double[] _offsetRad = { 0, 0, 1.57079, 0, 0, 0 };

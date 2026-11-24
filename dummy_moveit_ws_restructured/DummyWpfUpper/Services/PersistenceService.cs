@@ -3,6 +3,9 @@ using System.Text.Json;
 
 namespace DummyWpfUpper.Services;
 
+/// <summary>
+/// 应用配置。
+/// </summary>
 public sealed class AppConfig
 {
     public string SelectedPort { get; set; } = string.Empty;

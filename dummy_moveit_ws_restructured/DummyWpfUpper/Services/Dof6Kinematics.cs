@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace DummyWpfUpper.Services;
 
+/// <summary>
+/// 关节角度，单位 deg。
+/// </summary>
 public sealed class Joint6D
 {
     public double[] A { get; } = new double[6];

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DummyWpfUpper")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+96dc806844b16ad5867581d86558d761b3634e09")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+28bbd6a7010d195958da326aa0891309814dd224")]
 [assembly: System.Reflection.AssemblyProductAttribute("DummyWpfUpper")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DummyWpfUpper")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

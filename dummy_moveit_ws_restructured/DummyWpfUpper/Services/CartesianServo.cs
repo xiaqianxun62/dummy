@@ -5,7 +5,9 @@ public enum ServoFrame
     Base,
     Tool
 }
-
+/// <summary>
+/// 笛卡尔速度伺服结果。
+/// </summary>
 public sealed record ServoResult(double[] JointVelocitiesDegPerSec, double[] TwistBase);
 
 /// <summary>
