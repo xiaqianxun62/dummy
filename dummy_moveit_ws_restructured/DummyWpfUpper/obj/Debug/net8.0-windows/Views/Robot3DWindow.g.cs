@@ -91,7 +91,7 @@ namespace DummyWpfUpper.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/DummyWpfUpper;component/views/robot3dwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/DummyWpfUpper;V1.0.0.0;component/views/robot3dwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\Robot3DWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
